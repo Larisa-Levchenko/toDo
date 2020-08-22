@@ -56,5 +56,8 @@ todoControl.addEventListener('submit', function (event) {
     }
 
 });
-todoDate = JSON.parse(localStorage.todo);
-render();
+if(localStorage.todo!==undefined){
+    todoDate = JSON.parse(localStorage.todo);
+    render();
+}
+
