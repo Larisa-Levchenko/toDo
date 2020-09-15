@@ -1,100 +1,141 @@
 'use strict';
 
-class Todo{
-    constructor(form, input, todoList, todoCompleted,todoContainer){
-        this.form=document.querySelector(form);
+class Todo {
+    constructor(form, input, todoList, todoCompleted, todoContainer) {
+        this.form = document.querySelector(form);
         this.input = document.querySelector(input);
         this.todoList = document.querySelector(todoList);
-        this.todoCompleted  = document.querySelector(todoCompleted);
+        this.todoCompleted = document.querySelector(todoCompleted);
         this.todoContainer = document.querySelector(todoContainer);
         this.todoDate = new Map(JSON.parse(localStorage.getItem('toDoList')));
+        this.animationElem;
+        this.percent=1;
+    }
+    
+    addToStorage() {
+        localStorage.setItem('toDoList', JSON.stringify([...this.todoDate]));
     }
 
-    addToStorage(){
-        localStorage.setItem('toDoList',JSON.stringify([...this.todoDate]));
-    }
-
-    render(){
+    render() {
         this.addToStorage();
-        this.todoList.textContent='';
+        this.todoList.textContent = '';
         this.todoCompleted.textContent = '';
         this.todoDate.forEach(this.createItem, this);
     }
 
-    createItem(todo){
+    createItem(todo) {
         const li = document.createElement('li');
         li.classList.add('todo-item');
         li.insertAdjacentHTML('beforeend', `
         <span class = "text-todo" >${todo.value}</span> 
-        <div class="todo-buttons">
+        <div class="todo-buttons">            
             <button class="todo-remove"></button> 
             <button class="todo-complete"></button>
+            <button class="todo-edit"></button>            
         </div>`);
-       
-        if(todo.complated) {
-            this.todoCompleted.append(li);
-        }else{
-            this.todoList.append(li);
-        }      
-    }
-    
 
-    completedItem(item){
+        if (todo.complated) {
+            this.todoCompleted.append(li);
+        } else {
+            this.todoList.append(li);
+        }
+    }
+
+    animationItem(){ 
+        if(this.percent>0){
+            this.percent = (this.percent - 0.025).toFixed(2);
+            this.animationElem.style.opacity = this.percent;            
+            requestAnimationFrame(this.animationItem.bind(this));
+        }else{
+            this.render();
+        }
+    }
+
+    completedItem(item) {
         this.todoDate.forEach((elem) => {
             if (item === elem.value) {
-                elem.complated = !elem.complated;  
+                elem.complated = !elem.complated;
             }
         });
     }
 
-    deleteItem(item){
-        this.todoDate.forEach((elem) => {
+    deleteItem(item) {        
+        this.todoDate.forEach((elem) => {           
             if (item === elem.value) {
-               this.todoDate.delete(elem.key);
-            }
-        });        
+                this.todoDate.delete(elem.key);
+            } 
+            
+        });
     }
 
-    handler(){
+    isString(n){
+        return n !== null && n.trim().length !== 0;
+    }
+
+    editItem(item){
+        this.todoDate.forEach((elem) => {
+            if (item === elem.value) {
+                let popup=document.querySelector('.popup');
+                let btn = document.querySelector('.edit-btn');
+                let input = document.querySelector('.edit-value');
+                popup.style.display='flex';
+                btn.addEventListener('click', ()=>{
+                    if(this.isString(input.value)){
+                        elem.value=input.value;
+                        input.value='';
+                        popup.style.display='none';
+                        this.render();
+                    }
+                });
+            }
+        });
+    }
+
+    handler() {
         this.todoContainer.addEventListener('click', (event) => {
             let target = event.target;
             let targetItem = target.closest('.todo-item');
             let items = document.querySelectorAll('.todo-item');
-            let item,key;
-            items.forEach((elem, i) => {
+            let item;
+            items.forEach((elem) => {
                 if (elem === targetItem) {
                     item = elem.textContent.trim();
-                    
                 }
             });
-            if (target.classList.contains('todo-complete')){
-                this.completedItem(item);
+             if (target.classList.contains('todo-edit')){
+                    this.editItem(item);
             }
-            if (target.classList.contains('todo-remove')) {
-                this.deleteItem(item);
-            } 
-            this.render();
-                        
+            if (target.classList.contains('todo-complete') || target.classList.contains('todo-remove')) {
+                if (target.classList.contains('todo-complete')) {
+                    this.completedItem(item);
+                }
+                if (target.classList.contains('todo-remove')) {
+                    this.deleteItem(item);
+                }
+                target = target.closest('.todo-item');
+                this.percent = 1;
+                this.animationElem = target;
+                this.animationItem();                
+            }            
         });
-        
     }
 
-    addTodo(event){
+    addTodo(event) {
         event.preventDefault();
-        if(this.input.value.trim()){
-            const newTodo={
+        if (this.input.value.trim()) {
+            const newTodo = {
                 value: this.input.value.trim(),
                 complated: false,
                 key: `f${(+new Date()).toString(32)}`
             };
-            this.todoDate.set(newTodo.key,newTodo);
+            this.todoDate.set(newTodo.key, newTodo);
         }
-        this.input.value='';
+        this.input.value = '';
         this.render();
     }
 
-    init(){
-        this.form.addEventListener('submit',this.addTodo.bind(this));
+    init() {
+        this.form.addEventListener('submit', this.addTodo.bind(this));
         this.render();
         this.handler();
     }
