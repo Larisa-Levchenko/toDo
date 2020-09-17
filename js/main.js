@@ -70,23 +70,16 @@ class Todo {
 
     isString(n){
         return n !== null && n.trim().length !== 0;
-    }
-
-    editItem(item){
-        this.todoDate.forEach((elem) => {
+    }   
+    
+    editItem(item){        
+        this.todoDate.forEach((elem) => {            
             if (item === elem.value) {
-                let popup=document.querySelector('.popup');
-                let btn = document.querySelector('.edit-btn');
-                let input = document.querySelector('.edit-value');
-                popup.style.display='flex';
-                btn.addEventListener('click', ()=>{
-                    if(this.isString(input.value)){
-                        elem.value=input.value;
-                        input.value='';
-                        popup.style.display='none';
-                        this.render();
-                    }
-                });
+                do {
+                  elem.value = prompt("Введите новое значение");
+                } while (!this.isString(elem.value));
+                this.render();
+                
             }
         });
     }
@@ -102,8 +95,8 @@ class Todo {
                     item = elem.textContent.trim();
                 }
             });
-             if (target.classList.contains('todo-edit')){
-                    this.editItem(item);
+             if (target.classList.contains('todo-edit')){                   
+                    this.editItem(item);                    
             }
             if (target.classList.contains('todo-complete') || target.classList.contains('todo-remove')) {
                 if (target.classList.contains('todo-complete')) {
